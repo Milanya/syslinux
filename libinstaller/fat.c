@@ -29,8 +29,7 @@
 void syslinux_make_bootsect(void *bs)
 {
     struct boot_sector *bootsect = bs;
-    const struct boot_sector *sbs =
-	(const struct boot_sector *)boot_sector;
+    const struct boot_sector *sbs = (const struct boot_sector *)boot_sector;
 
     memcpy(&bootsect->bsHead, &sbs->bsHead, bsHeadLen);
     memcpy(&bootsect->bsCode, &sbs->bsCode, bsCodeLen);
@@ -56,8 +55,7 @@ const char *syslinux_check_bootsect(const void *bs)
 	return "invalid media signature (not a FAT filesystem?)";
 
     sectorsize = get_16(&sectbuf->bsBytesPerSec);
-    if (sectorsize == SECTOR_SIZE)
-	;			/* ok */
+    if (sectorsize == SECTOR_SIZE) ;	/* ok */
     else if (sectorsize >= 512 && sectorsize <= 4096 &&
 	     (sectorsize & (sectorsize - 1)) == 0)
 	return "unsupported sectors size";
@@ -103,7 +101,7 @@ const char *syslinux_check_bootsect(const void *bs)
 		if (clusters < 0xFF5)
 		    return "less than 4084 clusters but claims FAT16";
 	    } else if (!memcmp(&sectbuf->bs16.FileSysType, "FAT32   ", 8)) {
-		    return "less than 65525 clusters but claims FAT32";
+		return "less than 65525 clusters but claims FAT32";
 	    } else if (memcmp(&sectbuf->bs16.FileSysType, "FAT     ", 8)) {
 		static char fserr[] =
 		    "filesystem type \"????????\" not supported";
