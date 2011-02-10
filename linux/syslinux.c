@@ -252,7 +252,7 @@ int main(int argc, char *argv[])
     const char *errmsg;
     int mnt_cookie;
     int patch_sectors;
-    int i;
+    int i, rv;
 
     mypid = getpid();
     umask(077);
@@ -261,10 +261,9 @@ int main(int argc, char *argv[])
     /* Note: subdir is guaranteed to start and end in / */
     if (opt.directory && opt.directory[0]) {
 	int len = strlen(opt.directory);
-	int rv = asprintf(&subdir, "%s%s%s",
-			  opt.directory[0] == '/' ? "" : "/",
-			  opt.directory,
-			  opt.directory[len - 1] == '/' ? "" : "/");
+	rv = asprintf(&subdir, "%s%s%s",
+		      opt.directory[0] == '/' ? "" : "/",
+		      opt.directory, opt.directory[len - 1] == '/' ? "" : "/");
 	if (rv < 0 || !subdir) {
 	    perror(program);
 	    exit(1);
@@ -294,14 +293,14 @@ int main(int argc, char *argv[])
 	die("can't combine an offset with a block device");
     }
 
-    fs_type = VFAT;
     xpread(dev_fd, sectbuf, SECTOR_SIZE, opt.offset);
     fsync(dev_fd);
 
     /*
-     * Check to see that what we got was indeed an MS-DOS boot sector/superblock
+     * Check to see that what we got was indeed an FAT/NTFS boot sector/superblock;
+     * *fs_type* will be set upon syslinux_check_bootsect() routine;
      */
-    if ((errmsg = syslinux_check_bootsect(sectbuf))) {
+    if ((errmsg = syslinux_check_bootsect(sectbuf, &fs_type))) {
 	fprintf(stderr, "%s: %s\n", opt.device, errmsg);
 	exit(1);
     }
@@ -314,7 +313,6 @@ int main(int argc, char *argv[])
     } else {
 	int i = 0;
 	struct stat dst;
-	int rv;
 
 	/* We're root or at least setuid.
 	   Make a temp dir and pass all the gunky options to mount. */
@@ -357,8 +355,16 @@ int main(int argc, char *argv[])
 	mntpath = mntname;
     }
 
-    if (do_mount(dev_fd, &mnt_cookie, mntpath, "vfat") &&
-	do_mount(dev_fd, &mnt_cookie, mntpath, "msdos")) {
+    rv = 0;
+    if (fs_type == VFAT) {
+	rv = do_mount(dev_fd, &mnt_cookie, mntpath, "vfat");
+	if (rv)
+	    rv = do_mount(dev_fd, &mnt_cookie, mntpath, "msdos");
+    } else if (fs_type == NTFS) {
+	rv = do_mount(dev_fd, &mnt_cookie, mntpath, "ntfs-3g");
+    }
+
+    if (rv) {
 	rmdir(mntpath);
 	die("mount failed");
     }
@@ -472,7 +478,7 @@ umount:
     xpread(dev_fd, sectbuf, SECTOR_SIZE, opt.offset);
 
     /* Copy the syslinux code into the boot sector */
-    syslinux_make_bootsect(sectbuf);
+    syslinux_make_bootsect(sectbuf, fs_type);
 
     /* Write new boot sector */
     xpwrite(dev_fd, sectbuf, SECTOR_SIZE, opt.offset);

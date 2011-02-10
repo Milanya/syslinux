@@ -40,10 +40,14 @@ extern const int syslinux_mbr_mtime;
 #define SECTOR_SIZE	(1 << SECTOR_SHIFT)
 
 /* This takes a boot sector and merges in the syslinux fields */
-void syslinux_make_bootsect(void *);
+void syslinux_make_bootsect(void *bs, int fs_type);
 
-/* Check to see that what we got was indeed an MS-DOS boot sector/superblock */
-const char *syslinux_check_bootsect(const void *bs);
+/* Check to see that what we got was indeed an FAT/NTFS boot sector/superblock */
+const char *syslinux_check_bootsect(const void *bs, int *fs_type);
+
+/* FAT/NTFS-specific boot sector checking methods */
+const char *syslinux_check_fat_bootsect(const void *bs, long long clusters);
+const char *syslinux_check_ntfs_bootsect(const void *bs, long long clusters);
 
 /* This patches the boot sector and ldlinux.sys based on a sector map */
 typedef uint64_t sector_t;

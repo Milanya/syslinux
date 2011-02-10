@@ -7,6 +7,8 @@ CFLAGS	 = $(GCCWARN) -D_FILE_OFFSET_BITS=64 $(OPTFLAGS) $(INCLUDES)
 LDFLAGS	 = -s
 
 SRCS     = syslinux.c \
+	   ../libinstaller/fs.c \
+	   ../libinstaller/ntfs.c \
 	   ../libinstaller/fat.c \
 	   ../libinstaller/syslxmod.c \
 	   ../libinstaller/syslxopt.c \

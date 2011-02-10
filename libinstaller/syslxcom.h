@@ -3,12 +3,13 @@
 
 #include "syslinux.h"
 
-/* Global fs_type for handling fat, ext2/3/4 and btrfs */
+/* Global fs_type for handling fat, ntfs, ext2/3/4 and btrfs */
 enum filesystem {
     NONE,
     EXT2,
     BTRFS,
     VFAT,
+    NTFS,
 };
 
 extern int fs_type;

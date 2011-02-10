@@ -163,6 +163,8 @@ void set_attributes(int fd)
 		ioctl(fd, FAT_IOCTL_SET_ATTRIBUTES, &attr);
 		break;
 	    }
+	case NTFS:
+	    break;
 	default:
 	    break;
 	}

@@ -1,7 +1,8 @@
 /* ----------------------------------------------------------------------- *
  *
- *   Copyright 2007-2008 H. Peter Anvin - All Rights Reserved
+ *   Copyright 2007-2011 H. Peter Anvin - All Rights Reserved
  *   Copyright 2009-2011 Intel Corporation; author: H. Peter Anvin
+ *   Copyright 2011 Paulo Alcantara <pcacjr@gmail.com>
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -191,6 +192,39 @@ struct syslinux_extent {
     uint16_t len;
 } __attribute__ ((packed));
 
+/* NTFS bootsector format */
+struct ntfs_boot_sector {
+    uint8_t jmp[3];
+    uint8_t oem_id[8];
+    uint16_t sector_size;
+    uint8_t sectors_per_cluster;
+    uint16_t reserved_sectors;
+    uint8_t zo_0[3];
+    uint16_t zo_1;
+    uint8_t media_desc;
+    uint16_t zo_2;
+    uint8_t unused_0[8];
+    uint32_t zo_4;
+    uint32_t unused_1;
+    uint32_t total_sectors_low;
+    uint32_t total_sectors_high;
+    uint32_t mft_lclust_low;
+    uint32_t mft_lclust_high;;
+    uint32_t mft_mirr_lclust_low;
+    uint32_t mft_mirr_lclust_high;
+    uint8_t clusters_per_mft_record;
+    uint8_t unused_2[3];
+    uint8_t clusters_per_ibuf;
+    uint8_t unused_3[3];
+    uint8_t vol_serial_nr[8];
+    uint32_t unused_4;
+
+    /* The bootstrap (syslinux) code goes here */
+    uint8_t code[426];
+
+    uint16_t sig;
+} __attribute__ ((packed));
+
 /* FAT bootsector format, also used by other disk-based derivatives */
 struct boot_sector {
     uint8_t bsJump[3];
@@ -241,10 +275,18 @@ struct boot_sector {
     uint16_t bsSignature;
 } __attribute__ ((packed));
 
-#define bsHead      bsJump
-#define bsHeadLen   offsetof(struct boot_sector, bsBytesPerSec)
-#define bsCode	    bs32.Code	/* The common safe choice */
-#define bsCodeLen   (offsetof(struct boot_sector, bsSignature) - \
-		     offsetof(struct boot_sector, bsCode))
+#define fat_boot_sector boot_sector
+
+#define FAT_bsHead 		bsJump
+#define FAT_bsHeadLen 	offsetof(struct fat_boot_sector, bsBytesPerSec)
+#define FAT_bsCode		bs32.Code
+#define FAT_bsCodeLen	(offsetof(struct fat_boot_sector, bsSignature) - \
+						 offsetof(struct fat_boot_sector, bs32.Code))
+
+#define NTFS_bsHead 	jmp
+#define NTFS_bsHeadLen 	offsetof(struct ntfs_boot_sector, sector_size)
+#define NTFS_bsCode		code
+#define NTFS_bsCodeLen	(offsetof(struct ntfs_boot_sector, sig) - \
+						 offsetof(struct ntfs_boot_sector, code))
 
 #endif /* SYSLXINT_H */

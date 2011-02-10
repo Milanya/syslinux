@@ -474,7 +474,7 @@ int main(int argc, char *argv[])
     }
 
     /* Make the syslinux boot sector */
-    syslinux_make_bootsect(sectbuf);
+    syslinux_make_bootsect(sectbuf, 3);	/* Note: 3 == VFAT */
 
     /* Write the syslinux boot sector into the boot sector */
     if (opt.bootsecfile) {

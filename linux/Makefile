@@ -11,7 +11,7 @@
 ## -----------------------------------------------------------------------
 
 ##
-## Linux FAT installer
+## Linux FAT/NTFS installer
 ##
 
 topdir = ..
@@ -27,8 +27,10 @@ SRCS     = syslinux.c \
 	   ../libinstaller/syslxcom.c \
 	   ../libinstaller/setadv.c \
 	   ../libinstaller/advio.c \
-           ../libinstaller/fat.c \
-           ../libinstaller/syslxmod.c \
+       ../libinstaller/fs.c \
+       ../libinstaller/fat.c \
+       ../libinstaller/ntfs.c \
+       ../libinstaller/syslxmod.c \
 	   ../libinstaller/bootsect_bin.c \
 	   ../libinstaller/ldlinux_bin.c
 OBJS	 = $(patsubst %.c,%.o,$(notdir $(SRCS)))

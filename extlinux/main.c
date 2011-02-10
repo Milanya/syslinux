@@ -359,16 +359,20 @@ int install_bootblock(int fd, const char *device)
 	return 1;
     }
     if (fs_type == VFAT) {
-	struct boot_sector *sbs = (struct boot_sector *)syslinux_bootsect;
-	if (xpwrite(fd, &sbs->bsHead, bsHeadLen, 0) != bsHeadLen ||
-	    xpwrite(fd, &sbs->bsCode, bsCodeLen,
-		    offsetof(struct boot_sector, bsCode)) != bsCodeLen) {
+	struct boot_sector *sbs;
+
+	sbs = (struct fat_boot_sector *)syslinux_bootsect;
+	if (xpwrite(fd,
+		    &sbs->FAT_bsHead, FAT_bsHeadLen, 0) != FAT_bsHeadLen ||
+	    xpwrite(fd, &sbs->FAT_bsCode, FAT_bsCodeLen,
+		    offsetof(struct fat_boot_sector,
+			     FAT_bsCode)) != FAT_bsCodeLen) {
 	    perror("writing fat bootblock");
 	    return 1;
 	}
     } else {
-	if (xpwrite(fd, syslinux_bootsect, syslinux_bootsect_len, 0)
-	    != syslinux_bootsect_len) {
+	if (xpwrite(fd, syslinux_bootsect,
+		    syslinux_bootsect_len, 0) != syslinux_bootsect_len) {
 	    perror("writing bootblock");
 	    return 1;
 	}
