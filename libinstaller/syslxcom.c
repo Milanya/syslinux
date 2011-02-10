@@ -118,21 +118,21 @@ void clear_attributes(int fd)
     if (!fstat(fd, &st)) {
 	switch (fs_type) {
 	case EXT2:
-	{
-	    int flags;
+	    {
+		int flags;
 
-	    if (!ioctl(fd, EXT2_IOC_GETFLAGS, &flags)) {
-		flags &= ~EXT2_IMMUTABLE_FL;
-		ioctl(fd, EXT2_IOC_SETFLAGS, &flags);
+		if (!ioctl(fd, EXT2_IOC_GETFLAGS, &flags)) {
+		    flags &= ~EXT2_IMMUTABLE_FL;
+		    ioctl(fd, EXT2_IOC_SETFLAGS, &flags);
+		}
+		break;
 	    }
-	    break;
-	}
 	case VFAT:
-	{
-	    uint32_t attr = 0x00; /* Clear all attributes */
-	    ioctl(fd, FAT_IOCTL_SET_ATTRIBUTES, &attr);
-	    break;
-	}
+	    {
+		uint32_t attr = 0x00;	/* Clear all attributes */
+		ioctl(fd, FAT_IOCTL_SET_ATTRIBUTES, &attr);
+		break;
+	    }
 	default:
 	    break;
 	}
@@ -148,21 +148,21 @@ void set_attributes(int fd)
 	fchmod(fd, st.st_mode & (S_IRUSR | S_IRGRP | S_IROTH));
 	switch (fs_type) {
 	case EXT2:
-	{
-	    int flags;
+	    {
+		int flags;
 
-	    if (st.st_uid == 0 && !ioctl(fd, EXT2_IOC_GETFLAGS, &flags)) {
-		flags |= EXT2_IMMUTABLE_FL;
-		ioctl(fd, EXT2_IOC_SETFLAGS, &flags);
+		if (st.st_uid == 0 && !ioctl(fd, EXT2_IOC_GETFLAGS, &flags)) {
+		    flags |= EXT2_IMMUTABLE_FL;
+		    ioctl(fd, EXT2_IOC_SETFLAGS, &flags);
+		}
+		break;
 	    }
-	    break;
-	}
 	case VFAT:
-	{
-	    uint32_t attr = 0x07; /* Hidden+System+Readonly */
-	    ioctl(fd, FAT_IOCTL_SET_ATTRIBUTES, &attr);
-	    break;
-	}
+	    {
+		uint32_t attr = 0x07;	/* Hidden+System+Readonly */
+		ioctl(fd, FAT_IOCTL_SET_ATTRIBUTES, &attr);
+		break;
+	    }
 	default:
 	    break;
 	}
@@ -170,7 +170,7 @@ void set_attributes(int fd)
 }
 
 /* New FIEMAP based mapping */
-static int sectmap_fie(int fd, sector_t *sectors, int nsectors)
+static int sectmap_fie(int fd, sector_t * sectors, int nsectors)
 {
     struct fiemap *fm;
     struct fiemap_extent *fe;
@@ -187,13 +187,13 @@ static int sectmap_fie(int fd, sector_t *sectors, int nsectors)
 
     memset(fm, 0, sizeof *fm);
 
-    maplen = (uint64_t)nsectors << SECTOR_SHIFT;
-    if (maplen > (uint64_t)st.st_size)
+    maplen = (uint64_t) nsectors << SECTOR_SHIFT;
+    if (maplen > (uint64_t) st.st_size)
 	maplen = st.st_size;
 
-    fm->fm_start        = 0;
-    fm->fm_length       = maplen;
-    fm->fm_flags        = FIEMAP_FLAG_SYNC;
+    fm->fm_start = 0;
+    fm->fm_length = maplen;
+    fm->fm_flags = FIEMAP_FLAG_SYNC;
     fm->fm_extent_count = nsectors;
 
     if (ioctl(fd, FS_IOC_FIEMAP, fm))
@@ -205,7 +205,7 @@ static int sectmap_fie(int fd, sector_t *sectors, int nsectors)
     fe = fm->fm_extents;
 
     if (fm->fm_mapped_extents < 1 ||
-	!(fe[fm->fm_mapped_extents-1].fe_flags & FIEMAP_EXTENT_LAST))
+	!(fe[fm->fm_mapped_extents - 1].fe_flags & FIEMAP_EXTENT_LAST))
 	return -1;
 
     for (i = 0; i < fm->fm_mapped_extents; i++) {
@@ -215,19 +215,19 @@ static int sectmap_fie(int fd, sector_t *sectors, int nsectors)
 		& ~(SECTOR_SIZE - 1);
 	}
 
-	if ((fe->fe_logical | fe->fe_physical| fe->fe_length) &
+	if ((fe->fe_logical | fe->fe_physical | fe->fe_length) &
 	    (SECTOR_SIZE - 1))
 	    return -1;
 
-	if (fe->fe_flags & (FIEMAP_EXTENT_UNKNOWN|
-			    FIEMAP_EXTENT_DELALLOC|
-			    FIEMAP_EXTENT_ENCODED|
-			    FIEMAP_EXTENT_DATA_ENCRYPTED|
+	if (fe->fe_flags & (FIEMAP_EXTENT_UNKNOWN |
+			    FIEMAP_EXTENT_DELALLOC |
+			    FIEMAP_EXTENT_ENCODED |
+			    FIEMAP_EXTENT_DATA_ENCRYPTED |
 			    FIEMAP_EXTENT_UNWRITTEN))
 	    return -1;
 
 	secp = sectors + (fe->fe_logical >> SECTOR_SHIFT);
-	sec  = fe->fe_physical >> SECTOR_SHIFT;
+	sec = fe->fe_physical >> SECTOR_SHIFT;
 	nsec = fe->fe_length >> SECTOR_SHIFT;
 
 	while (nsec--) {
@@ -243,7 +243,7 @@ static int sectmap_fie(int fd, sector_t *sectors, int nsectors)
 }
 
 /* Legacy FIBMAP based mapping */
-static int sectmap_fib(int fd, sector_t *sectors, int nsectors)
+static int sectmap_fib(int fd, sector_t * sectors, int nsectors)
 {
     unsigned int blk, nblk;
     unsigned int i;
@@ -263,10 +263,10 @@ static int sectmap_fib(int fd, sector_t *sectors, int nsectors)
 	if (ioctl(fd, FIBMAP, &blk))
 	    return -1;
 
-	sec = (sector_t)blk * blksize;
+	sec = (sector_t) blk *blksize;
 	for (i = 0; i < blksize; i++) {
 	    *sectors++ = sec++;
-	    if (! --nsectors)
+	    if (!--nsectors)
 		break;
 	}
     }
@@ -277,7 +277,7 @@ static int sectmap_fib(int fd, sector_t *sectors, int nsectors)
 /*
  * Produce file map
  */
-int sectmap(int fd, sector_t *sectors, int nsectors)
+int sectmap(int fd, sector_t * sectors, int nsectors)
 {
     if (!sectmap_fie(fd, sectors, nsectors))
 	return 0;
