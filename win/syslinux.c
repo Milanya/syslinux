@@ -363,8 +363,7 @@ int main(int argc, char *argv[])
 	exit(1);
     }
     if (!WriteFile(f_handle, syslinux_adv, 2 * ADV_SIZE,
-		   &bytes_written, NULL) ||
-	bytes_written != 2 * ADV_SIZE) {
+		   &bytes_written, NULL) || bytes_written != 2 * ADV_SIZE) {
 	error("Could not write ADV to ldlinux.sys");
 	exit(1);
     }
@@ -394,7 +393,8 @@ int main(int argc, char *argv[])
     /*
      * Patch ldlinux.sys and the boot sector
      */
-    syslinux_patch(sectors, nsectors, opt.stupid_mode, opt.raid_mode, opt.directory, NULL);
+    syslinux_patch(sectors, nsectors, opt.stupid_mode, opt.raid_mode,
+		   opt.directory, NULL);
 
     /*
      * Rewrite the file
@@ -411,7 +411,9 @@ int main(int argc, char *argv[])
     if (opt.install_mbr || opt.activate_partition) {
 	STORAGE_DEVICE_NUMBER sdn;
 	if (GetStorageDeviceNumberByHandle(d_handle, &sdn)) {
-	    if (!FixMBR(sdn.DeviceNumber, sdn.PartitionNumber, opt.install_mbr, opt.activate_partition)) {
+	    if (!FixMBR
+		(sdn.DeviceNumber, sdn.PartitionNumber, opt.install_mbr,
+		 opt.activate_partition)) {
 		fprintf(stderr,
 			"Did not successfully update the MBR; continuing...\n");
 	    }
