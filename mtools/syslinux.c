@@ -219,8 +219,7 @@ int main(int argc, char *argv[])
 	    "drive s:\n"
 	    "  file=\"/proc/%lu/fd/%d\"\n"
 	    "  offset=%llu\n",
-	    (unsigned long)mypid,
-	    dev_fd, (unsigned long long)opt.offset);
+	    (unsigned long)mypid, dev_fd, (unsigned long long)opt.offset);
 
     if (ferror(mtc) || fclose(mtc))
 	die_err(mtools_conf);
@@ -243,11 +242,9 @@ int main(int argc, char *argv[])
     (void)status;		/* Keep _FORTIFY_SOURCE happy */
 
     mtp = popen("mcopy -D o -D O -o - s:/ldlinux.sys", "w");
-    if (!mtp ||
-	fwrite(syslinux_ldlinux, 1, syslinux_ldlinux_len, mtp)
-		!= syslinux_ldlinux_len ||
-	fwrite(syslinux_adv, 1, 2 * ADV_SIZE, mtp)
-		!= 2 * ADV_SIZE ||
+    if (!mtp || fwrite(syslinux_ldlinux, 1, syslinux_ldlinux_len, mtp)
+	!= syslinux_ldlinux_len || fwrite(syslinux_adv, 1, 2 * ADV_SIZE, mtp)
+	!= 2 * ADV_SIZE ||
 	(status = pclose(mtp), !WIFEXITED(status) || WEXITSTATUS(status))) {
 	die("failed to create ldlinux.sys");
     }
