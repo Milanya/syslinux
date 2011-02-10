@@ -47,9 +47,9 @@ typedef uint64_t u64;
 #include "fat.h"
 #include "../version.h"
 #include "syslxint.h"
-#include "syslxcom.h" /* common functions shared with extlinux and syslinux */
+#include "syslxcom.h"		/* common functions shared with extlinux and syslinux */
 #include "setadv.h"
-#include "syslxopt.h" /* unified options */
+#include "syslxopt.h"		/* unified options */
 
 #ifdef DEBUG
 # define dprintf printf
@@ -110,9 +110,9 @@ static int sysfs_get_offset(int devfd, unsigned long *start)
     if (fstat(devfd, &st))
 	return -1;
 
-    if ((size_t)snprintf(sysfs_name, sizeof sysfs_name,
-			 "/sys/dev/block/%u:%u/start",
-			 major(st.st_dev), minor(st.st_dev))
+    if ((size_t) snprintf(sysfs_name, sizeof sysfs_name,
+			  "/sys/dev/block/%u:%u/start",
+			  major(st.st_dev), minor(st.st_dev))
 	>= sizeof sysfs_name)
 	return -1;
 
@@ -226,8 +226,7 @@ int patch_file_and_bootblock(int fd, const char *dir, int devfd)
     }
 
     if (lstat(dirpath, &xdst) ||
-	dirst.st_ino != xdst.st_ino ||
-	dirst.st_dev != xdst.st_dev) {
+	dirst.st_ino != xdst.st_ino || dirst.st_dev != xdst.st_dev) {
 	perror("realpath returned nonsense");
 	exit(255);
     }
@@ -237,16 +236,16 @@ int patch_file_and_bootblock(int fd, const char *dir, int devfd)
 	if (*subpath == '/') {
 	    if (subpath > dirpath) {
 		*subpath = '\0';
-		xsubpath = subpath+1;
+		xsubpath = subpath + 1;
 		xdirpath = dirpath;
 	    } else {
 		xsubpath = subpath;
 		xdirpath = "/";
 	    }
 	    if (lstat(xdirpath, &xdst) || dirst.st_dev != xdst.st_dev) {
-		subpath = strchr(subpath+1, '/');
+		subpath = strchr(subpath + 1, '/');
 		if (!subpath)
-		    subpath = "/"; /* It's the root of the filesystem */
+		    subpath = "/";	/* It's the root of the filesystem */
 		break;
 	    }
 	    *subpath = '/';
@@ -297,17 +296,17 @@ int patch_file_and_bootblock(int fd, const char *dir, int devfd)
     sectp = alloca(sizeof(sector_t) * nsect);
     if (fs_type == EXT2 || fs_type == VFAT) {
 	if (sectmap(fd, sectp, nsect)) {
-		perror("bmap");
-		exit(1);
+	    perror("bmap");
+	    exit(1);
 	}
     } else if (fs_type == BTRFS) {
 	int i;
 	sector_t *sp = sectp;
 
 	for (i = 0; i < nsect - 2; i++)
-	    *sp++ = BTRFS_EXTLINUX_OFFSET/SECTOR_SIZE + i;
+	    *sp++ = BTRFS_EXTLINUX_OFFSET / SECTOR_SIZE + i;
 	for (i = 0; i < 2; i++)
-	    *sp++ = BTRFS_ADV_OFFSET/SECTOR_SIZE + i;
+	    *sp++ = BTRFS_ADV_OFFSET / SECTOR_SIZE + i;
     }
 
     /* Create the modified image in memory */
@@ -331,37 +330,37 @@ int install_bootblock(int fd, const char *device)
 
     if (fs_type == EXT2) {
 	if (xpread(fd, &sb, sizeof sb, EXT2_SUPER_OFFSET) != sizeof sb) {
-		perror("reading superblock");
-		return 1;
+	    perror("reading superblock");
+	    return 1;
 	}
 	if (sb.s_magic == EXT2_SUPER_MAGIC)
-		ok = true;
+	    ok = true;
     } else if (fs_type == BTRFS) {
 	if (xpread(fd, &sb2, sizeof sb2, BTRFS_SUPER_INFO_OFFSET)
-			!= sizeof sb2) {
-		perror("reading superblock");
-		return 1;
+	    != sizeof sb2) {
+	    perror("reading superblock");
+	    return 1;
 	}
-	if (sb2.magic == *(u64 *)BTRFS_MAGIC)
-		ok = true;
+	if (sb2.magic == *(u64 *) BTRFS_MAGIC)
+	    ok = true;
     } else if (fs_type == VFAT) {
 	if (xpread(fd, &sb3, sizeof sb3, 0) != sizeof sb3) {
-		perror("reading fat superblock");
-		return 1;
+	    perror("reading fat superblock");
+	    return 1;
 	}
 	if (sb3.bsResSectors && sb3.bsFATs &&
 	    (strstr(sb3.bs16.FileSysType, "FAT") ||
 	     strstr(sb3.bs32.FileSysType, "FAT")))
-		ok = true;
+	    ok = true;
     }
     if (!ok) {
 	fprintf(stderr, "no fat, ext2/3/4 or btrfs superblock found on %s\n",
-			device);
+		device);
 	return 1;
     }
     if (fs_type == VFAT) {
 	struct boot_sector *sbs = (struct boot_sector *)syslinux_bootsect;
-        if (xpwrite(fd, &sbs->bsHead, bsHeadLen, 0) != bsHeadLen ||
+	if (xpwrite(fd, &sbs->bsHead, bsHeadLen, 0) != bsHeadLen ||
 	    xpwrite(fd, &sbs->bsCode, bsCodeLen,
 		    offsetof(struct boot_sector, bsCode)) != bsCodeLen) {
 	    perror("writing fat bootblock");
@@ -478,7 +477,7 @@ int btrfs_install_file(const char *path, int devfd, struct stat *rst)
 {
     patch_file_and_bootblock(-1, path, devfd);
     if (xpwrite(devfd, boot_image, boot_image_len, BTRFS_EXTLINUX_OFFSET)
-		!= boot_image_len) {
+	!= boot_image_len) {
 	perror("writing bootblock");
 	return 1;
     }
@@ -498,11 +497,11 @@ int btrfs_install_file(const char *path, int devfd, struct stat *rst)
 
 int install_file(const char *path, int devfd, struct stat *rst)
 {
-	if (fs_type == EXT2 || fs_type == VFAT)
-		return ext2_fat_install_file(path, devfd, rst);
-	else if (fs_type == BTRFS)
-		return btrfs_install_file(path, devfd, rst);
-	return 1;
+    if (fs_type == EXT2 || fs_type == VFAT)
+	return ext2_fat_install_file(path, devfd, rst);
+    else if (fs_type == BTRFS)
+	return btrfs_install_file(path, devfd, rst);
+    return 1;
 }
 
 /*
@@ -560,47 +559,44 @@ static const char *find_device(const char *mtab_file, dev_t dev)
 	/* btrfs st_dev is not matched with mnt st_rdev, it is a known issue */
 	switch (fs_type) {
 	case BTRFS:
-		if (!strcmp(mnt->mnt_type, "btrfs") &&
-		    !stat(mnt->mnt_dir, &dst) &&
-		    dst.st_dev == dev) {
-		    char *opt = strstr(mnt->mnt_opts, BTRFS_SUBVOL_OPT);
+	    if (!strcmp(mnt->mnt_type, "btrfs") &&
+		!stat(mnt->mnt_dir, &dst) && dst.st_dev == dev) {
+		char *opt = strstr(mnt->mnt_opts, BTRFS_SUBVOL_OPT);
 
-		    if (opt) {
-			if (!subvol[0]) {
-			    char *tmp;
+		if (opt) {
+		    if (!subvol[0]) {
+			char *tmp;
 
-			    strcpy(subvol, opt + sizeof(BTRFS_SUBVOL_OPT) - 1);
-			    tmp = strchr(subvol, 32);
-			    if (tmp)
-				*tmp = '\0';
-			}
-			break; /* should break and let upper layer try again */
-		    } else
-			done = true;
-		}
-		break;
+			strcpy(subvol, opt + sizeof(BTRFS_SUBVOL_OPT) - 1);
+			tmp = strchr(subvol, 32);
+			if (tmp)
+			    *tmp = '\0';
+		    }
+		    break;	/* should break and let upper layer try again */
+		} else
+		    done = true;
+	    }
+	    break;
 	case EXT2:
-		if ((!strcmp(mnt->mnt_type, "ext2") ||
-		     !strcmp(mnt->mnt_type, "ext3") ||
-		     !strcmp(mnt->mnt_type, "ext4")) &&
-		    !stat(mnt->mnt_fsname, &dst) &&
-		    dst.st_rdev == dev) {
-		    done = true;
-		    break;
-		}
+	    if ((!strcmp(mnt->mnt_type, "ext2") ||
+		 !strcmp(mnt->mnt_type, "ext3") ||
+		 !strcmp(mnt->mnt_type, "ext4")) &&
+		!stat(mnt->mnt_fsname, &dst) && dst.st_rdev == dev) {
+		done = true;
+		break;
+	    }
 	case VFAT:
-		if ((!strcmp(mnt->mnt_type, "vfat")) &&
-		    !stat(mnt->mnt_fsname, &dst) &&
-		    dst.st_rdev == dev) {
-		    done = true;
-		    break;
-		}
+	    if ((!strcmp(mnt->mnt_type, "vfat")) &&
+		!stat(mnt->mnt_fsname, &dst) && dst.st_rdev == dev) {
+		done = true;
+		break;
+	    }
 	case NONE:
 	    break;
 	}
 	if (done) {
-		devname = strdup(mnt->mnt_fsname);
-		break;
+	    devname = strdup(mnt->mnt_fsname);
+	    break;
 	}
     }
     endmntent(mtab);
@@ -642,7 +638,7 @@ static const char *get_devname(const char *path)
 
     /* check /etc/mtab first, since btrfs subvol info is only in here */
     devname = find_device("/etc/mtab", st.st_dev);
-    if (subvol[0] && !devname) { /* we just find it is a btrfs subvol */
+    if (subvol[0] && !devname) {	/* we just find it is a btrfs subvol */
 	char parent[256];
 	char *tmp;
 
@@ -650,7 +646,8 @@ static const char *get_devname(const char *path)
 	tmp = strrchr(parent, '/');
 	if (tmp) {
 	    *tmp = '\0';
-	    fprintf(stderr, "%s is subvol, try its parent dir %s\n", path, parent);
+	    fprintf(stderr, "%s is subvol, try its parent dir %s\n", path,
+		    parent);
 	    devname = get_devname(parent);
 	} else
 	    devname = NULL;
@@ -677,8 +674,8 @@ static int open_device(const char *path, struct stat *st, const char **_devname)
 
     if (st)
 	if (stat(path, st) || !S_ISDIR(st->st_mode)) {
-		fprintf(stderr, "%s: Not a directory: %s\n", program, path);
-		return -1;
+	    fprintf(stderr, "%s: Not a directory: %s\n", program, path);
+	    return -1;
 	}
 
     if (statfs(path, &sfs)) {
@@ -740,18 +737,18 @@ static int ext_read_adv(const char *path, int devfd, const char **namep)
 	if (err == 2)		/* ldlinux.sys does not exist */
 	    err = read_adv(path, name = "extlinux.sys");
 	if (namep)
-	    *namep = name; 
+	    *namep = name;
 	return err;
     }
 }
 
 static int ext_write_adv(const char *path, const char *cfg, int devfd)
 {
-    if (fs_type == BTRFS) { /* btrfs "ldlinux.sys" is in 64k blank area */
+    if (fs_type == BTRFS) {	/* btrfs "ldlinux.sys" is in 64k blank area */
 	if (xpwrite(devfd, syslinux_adv, 2 * ADV_SIZE,
-		BTRFS_ADV_OFFSET) != 2 * ADV_SIZE) {
-		perror("writing adv");
-		return 1;
+		    BTRFS_ADV_OFFSET) != 2 * ADV_SIZE) {
+	    perror("writing adv");
+	    return 1;
 	}
 	return 0;
     }
