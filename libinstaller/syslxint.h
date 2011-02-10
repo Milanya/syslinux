@@ -37,7 +37,7 @@ static inline uint16_t get_16(const uint16_t * p)
     return *p;
 #else
     const uint8_t *pp = (const uint8_t *)p;
-    return pp[0] + ((uint16_t)pp[1] << 8);
+    return pp[0] + ((uint16_t) pp[1] << 8);
 #endif
 }
 
@@ -48,7 +48,7 @@ static inline uint32_t get_32(const uint32_t * p)
     return *p;
 #else
     const uint16_t *pp = (const uint16_t *)p;
-    return get_16(pp[0]) + (uint32_t)get_16(pp[1]);
+    return get_16(pp[0]) + (uint32_t) get_16(pp[1]);
 #endif
 }
 
@@ -59,16 +59,16 @@ static inline uint64_t get_64(const uint64_t * p)
     return *p;
 #else
     const uint32_t *pp = (const uint32_t *)p;
-    return get_32(pp[0]) + (uint64_t)get_32(pp[1]);
+    return get_32(pp[0]) + (uint64_t) get_32(pp[1]);
 #endif
 }
 
-static inline void set_8(uint8_t *p, uint8_t v)
+static inline void set_8(uint8_t * p, uint8_t v)
 {
     *p = v;
 }
 
-static inline void set_16(uint16_t *p, uint16_t v)
+static inline void set_16(uint16_t * p, uint16_t v)
 {
 #if X86_MEM
     /* Littleendian and unaligned-capable */
@@ -80,7 +80,7 @@ static inline void set_16(uint16_t *p, uint16_t v)
 #endif
 }
 
-static inline void set_32(uint32_t *p, uint32_t v)
+static inline void set_32(uint32_t * p, uint32_t v)
 {
 #if X86_MEM
     /* Littleendian and unaligned-capable */
@@ -94,7 +94,7 @@ static inline void set_32(uint32_t *p, uint32_t v)
 #endif
 }
 
-static inline void set_64(uint64_t *p, uint64_t v)
+static inline void set_64(uint64_t * p, uint64_t v)
 {
 #if X86_MEM
     /* Littleendian and unaligned-capable */
@@ -116,7 +116,7 @@ static inline __attribute__ ((const))
 uint16_t ds(void)
 {
     uint16_t v;
-    asm("movw %%ds,%0":"=rm"(v));
+asm("movw %%ds,%0":"=rm"(v));
     return v;
 }
 
@@ -189,7 +189,7 @@ struct ext_patch_area {
 struct syslinux_extent {
     uint64_t lba;
     uint16_t len;
-} __attribute__((packed));
+} __attribute__ ((packed));
 
 /* FAT bootsector format, also used by other disk-based derivatives */
 struct boot_sector {
