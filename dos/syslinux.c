@@ -32,7 +32,7 @@
 #include "syslxopt.h"
 #include "syslxint.h"
 
-char *program = "syslinux.com";		/* Name of program */
+char *program = "syslinux.com";	/* Name of program */
 uint16_t dos_version;
 
 #ifdef DEBUG
@@ -40,8 +40,8 @@ uint16_t dos_version;
 void pause(void)
 {
     uint16_t ax;
-    
-    asm volatile("int $0x16" : "=a" (ax) : "a" (0));
+
+    asm volatile ("int $0x16":"=a" (ax):"a"(0));
 }
 #else
 # define dprintf(...) ((void)0)
@@ -77,9 +77,8 @@ int creat(const char *filename, int mode)
     dprintf("creat(\"%s\", 0x%x)\n", filename, mode);
 
     rv = 0x3C00;
-    asm volatile ("int $0x21 ; setc %0"
-		  : "=bcdm" (err), "+a" (rv)
-		  : "c" (mode), "d" (filename));
+    asm volatile ("int $0x21 ; setc %0":"=bcdm" (err), "+a"(rv)
+		  :"c"(mode), "d"(filename));
     if (err) {
 	dprintf("rv = %d\n", rv);
 	die("cannot open ldlinux.sys");
@@ -122,7 +121,7 @@ int rename(const char *oldname, const char *newname)
 
 ssize_t write_ldlinux(int fd)
 {
-    uint16_t ldlinux_seg = ((size_t)syslinux_ldlinux >> 4) + ds();
+    uint16_t ldlinux_seg = ((size_t) syslinux_ldlinux >> 4) + ds();
     uint32_t offset = 0;
     uint16_t rv;
     uint8_t err;
@@ -135,8 +134,8 @@ ssize_t write_ldlinux(int fd)
 		      "movw %6,%%ds ; "
 		      "int $0x21 ; "
 		      "popw %%ds ; " "setc %0":"=bcdm" (err), "=a"(rv)
-		      :"a"(0x4000), "b"(fd), "c"(chunk), "d" (offset & 15),
-		      "SD" ((uint16_t)(ldlinux_seg + (offset >> 4))));
+		      :"a"(0x4000), "b"(fd), "c"(chunk), "d"(offset & 15),
+		      "SD"((uint16_t) (ldlinux_seg + (offset >> 4))));
 	if (err || rv == 0)
 	    die("file write error");
 	offset += rv;
@@ -171,7 +170,7 @@ uint16_t data_segment(void)
 {
     uint16_t ds;
 
-    asm("movw %%ds,%0" : "=rm"(ds));
+asm("movw %%ds,%0":"=rm"(ds));
     return ds;
 }
 
@@ -186,15 +185,13 @@ void write_device(int drive, const void *buf, size_t nsecs, unsigned int sector)
     dio.sectors = nsecs;
     dio.bufoffs = (uintptr_t) buf;
     dio.bufseg = data_segment();
-    
+
     if (dos_version >= 0x070a) {
 	/* Try FAT32-aware system call first */
-	asm volatile("int $0x21 ; jc 1f ; xorw %0,%0\n"
-		     "1:"
-		     : "=a" (errnum)
-		     : "a" (0x7305), "b" (&dio), "c" (-1), "d" (drive),
-		       "S" (1), "m" (dio)
-		     : "memory");
+	asm volatile ("int $0x21 ; jc 1f ; xorw %0,%0\n" "1:":"=a" (errnum)
+		      :"a"(0x7305), "b"(&dio), "c"(-1), "d"(drive),
+		      "S"(1), "m"(dio)
+		      :"memory");
 	dprintf(" rv(7305) = %04x", errnum);
     }
 
@@ -219,14 +216,12 @@ void read_device(int drive, void *buf, size_t nsecs, unsigned int sector)
     dio.sectors = nsecs;
     dio.bufoffs = (uintptr_t) buf;
     dio.bufseg = data_segment();
-    
+
     if (dos_version >= 0x070a) {
 	/* Try FAT32-aware system call first */
-	asm volatile("int $0x21 ; jc 1f ; xorw %0,%0\n"
-		     "1:"
-		     : "=a" (errnum)
-		     : "a" (0x7305), "b" (&dio), "c" (-1), "d" (drive),
-		       "S" (0), "m" (dio));
+	asm volatile ("int $0x21 ; jc 1f ; xorw %0,%0\n" "1:":"=a" (errnum)
+		      :"a"(0x7305), "b"(&dio), "c"(-1), "d"(drive),
+		      "S"(0), "m"(dio));
 	dprintf(" rv(7305) = %04x", errnum);
     }
 
@@ -272,17 +267,15 @@ uint32_t get_partition_offset(int drive)
     dp.specfunc = 1;		/* Get current information */
 
     rv = 0x440d;
-    asm volatile ("int $0x21 ; setc %0"
-		  :"=abcdm" (err), "+a"(rv), "=m"(dp)
-		  :"b" (drive), "c" (0x0860), "d" (&dp));
+    asm volatile ("int $0x21 ; setc %0":"=abcdm" (err), "+a"(rv), "=m"(dp)
+		  :"b"(drive), "c"(0x0860), "d"(&dp));
 
     if (!err)
 	return dp.hiddensecs;
 
     rv = 0x440d;
-    asm volatile ("int $0x21 ; setc %0"
-		  : "=abcdm" (err), "+a" (rv), "=m" (dp)
-		  : "b" (drive), "c" (0x4860), "d" (&dp));
+    asm volatile ("int $0x21 ; setc %0":"=abcdm" (err), "+a"(rv), "=m"(dp)
+		  :"b"(drive), "c"(0x4860), "d"(&dp));
 
     if (!err)
 	return dp.hiddensecs;
@@ -321,7 +314,7 @@ void write_mbr(int drive, const void *buf)
     mbr.bufferseg = data_segment();
 
     rv = 0x440d;
-    asm volatile ("int $0x21 ; setc %0" : "=bcdm" (err), "+a"(rv)
+    asm volatile ("int $0x21 ; setc %0":"=bcdm" (err), "+a"(rv)
 		  :"c"(0x0841), "d"(&mbr), "b"(drive), "m"(mbr));
 
     dprintf(" rv(0841) = %04x", rv);
@@ -331,7 +324,7 @@ void write_mbr(int drive, const void *buf)
     }
 
     rv = 0x440d;
-    asm volatile ("int $0x21 ; setc %0" : "=bcdm" (err), "+a"(rv)
+    asm volatile ("int $0x21 ; setc %0":"=bcdm" (err), "+a"(rv)
 		  :"c"(0x4841), "d"(&mbr), "b"(drive), "m"(mbr));
 
     dprintf(" rv(4841) = %04x\n", rv);
@@ -374,8 +367,7 @@ void read_mbr(int drive, const void *buf)
 	    ((const uint8_t *)buf)[3],
 	    ((const uint8_t *)buf)[4],
 	    ((const uint8_t *)buf)[5],
-	    ((const uint8_t *)buf)[6],
-	    ((const uint8_t *)buf)[7]);
+	    ((const uint8_t *)buf)[6], ((const uint8_t *)buf)[7]);
 }
 
 /* This call can legitimately fail, and we don't care, so ignore error return */
@@ -403,10 +395,9 @@ static inline void get_dos_version(void)
 {
     uint16_t ver;
 
-    asm("int $0x21 ; xchgb %%ah,%%al"
-	: "=a" (ver) 
-	: "a" (0x3001)
-	: "ebx", "ecx");
+asm("int $0x21 ; xchgb %%ah,%%al":"=a"(ver)
+:	"a"(0x3001)
+:	"ebx", "ecx");
     dos_version = ver;
 
     dprintf("DOS version %d.%d\n", (dos_version >> 8), dos_version & 0xff);
@@ -417,7 +408,7 @@ static uint8_t lock_level, lock_drive;
 
 static inline void set_lock_device(uint8_t device)
 {
-    lock_level  = 0;
+    lock_level = 0;
     lock_drive = device;
 }
 
@@ -430,14 +421,12 @@ static int do_lock(uint8_t level)
     /* DOS 7.10 = Win95 OSR2 = first version with FAT32 */
     uint16_t lock_call = (dos_version >= 0x070a) ? 0x484A : 0x084A;
 #else
-    uint16_t lock_call = 0x084A; /* MSDN says this is OK for all filesystems */
+    uint16_t lock_call = 0x084A;	/* MSDN says this is OK for all filesystems */
 #endif
 
     dprintf("Trying lock %04x... ", level_arg);
-    asm volatile ("int $0x21 ; setc %0"
-		  : "=bcdm" (err), "=a" (rv)
-		  : "a" (0x440d), "b" (level_arg),
-		    "c" (lock_call), "d" (0x0001));
+    asm volatile ("int $0x21 ; setc %0":"=bcdm" (err), "=a"(rv)
+		  :"a"(0x440d), "b"(level_arg), "c"(lock_call), "d"(0x0001));
     dprintf("%s %04x\n", err ? "err" : "ok", rv);
 
     return err ? rv : 0;
@@ -474,7 +463,7 @@ soft_fail:
     if (hard_lock) {
 	/* Hard locking, only level 4 supported */
 	/* This is needed for Win9x in DOS mode */
-	
+
 	err = do_lock(4);
 	if (err) {
 	    if (err == 0x0001) {
@@ -516,9 +505,8 @@ void unlock_device(int level)
 	uint16_t level_arg = (new_level << 8) + lock_drive;
 	rv = 0x440d;
 	dprintf("Trying unlock %04x... ", new_level);
-	asm volatile ("int $0x21 ; setc %0"
-		      : "=bcdm" (err), "+a" (rv)
-		      : "b" (level_arg), "c" (unlock_call));
+	asm volatile ("int $0x21 ; setc %0":"=bcdm" (err), "+a"(rv)
+		      :"b"(level_arg), "c"(unlock_call));
 	dprintf("%s %04x\n", err ? "err" : "ok", rv);
 	lock_level = new_level;
     }
@@ -722,7 +710,8 @@ int main(int argc, char *argv[])
     /*
      * Patch ldlinux.sys and the boot sector
      */
-    i = syslinux_patch(sectors, nsectors, opt.stupid_mode, opt.raid_mode, opt.directory, NULL);
+    i = syslinux_patch(sectors, nsectors, opt.stupid_mode, opt.raid_mode,
+		       opt.directory, NULL);
     patch_sectors = (i + SECTOR_SIZE - 1) >> SECTOR_SHIFT;
 
     /*
