@@ -70,7 +70,7 @@
 #include <sysexits.h>
 #include "syslxcom.h"
 #include "setadv.h"
-#include "syslxopt.h" /* unified options */
+#include "syslxopt.h"		/* unified options */
 
 extern const char *program;	/* Name of program */
 
@@ -264,7 +264,7 @@ int main(int argc, char *argv[])
 	int rv = asprintf(&subdir, "%s%s%s",
 			  opt.directory[0] == '/' ? "" : "/",
 			  opt.directory,
-			  opt.directory[len-1] == '/' ? "" : "/");
+			  opt.directory[len - 1] == '/' ? "" : "/");
 	if (rv < 0 || !subdir) {
 	    perror(program);
 	    exit(1);
@@ -383,7 +383,9 @@ int main(int argc, char *argv[])
 	    rmdir(mntpath);
 	    exit(0);
 	} else {
-	    fprintf(stderr, "%s: please specify --install or --update for the future\n", argv[0]);
+	    fprintf(stderr,
+		    "%s: please specify --install or --update for the future\n",
+		    argv[0]);
 	    opt.update_only = 0;
 	}
     }
@@ -430,7 +432,7 @@ int main(int argc, char *argv[])
     /*
      * Create a block map.
      */
-    ldlinux_sectors += 2; /* 2 ADV sectors */
+    ldlinux_sectors += 2;	/* 2 ADV sectors */
     sectors = calloc(ldlinux_sectors, sizeof *sectors);
     if (sectmap(fd, sectors, ldlinux_sectors)) {
 	perror("bmap");
