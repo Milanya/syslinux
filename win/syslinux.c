@@ -254,6 +254,7 @@ int main(int argc, char *argv[])
     int ldlinux_sectors;
     uint32_t ldlinux_cluster;
     int nsectors;
+    int fs_type;
 
     if (!checkver()) {
 	fprintf(stderr,
@@ -326,10 +327,10 @@ int main(int argc, char *argv[])
 	exit(1);
     }
 
-    /* Check to see that what we got was indeed an MS-DOS boot sector/superblock */
-    if ((errmsg = syslinux_check_bootsect(sectbuf))) {
-	fprintf(stderr, "%s\n", errmsg);
-	exit(1);
+    /* Check to see that what we got was indeed an FAT/NTFS boot sector/superblock */
+    if ((errmsg = syslinux_check_bootsect(sectbuf, &fs_type))) {
+        fprintf(stderr, "%s\n", errmsg);
+        exit(1);
     }
 
     /* Change to normal attributes to enable deletion */
@@ -472,7 +473,7 @@ int main(int argc, char *argv[])
     }
 
     /* Make the syslinux boot sector */
-    syslinux_make_bootsect(sectbuf);
+    syslinux_make_bootsect(sectbuf, fs_type);
 
     /* Write the syslinux boot sector into the boot sector */
     if (opt.bootsecfile) {

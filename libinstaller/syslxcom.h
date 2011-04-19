@@ -9,6 +9,7 @@ enum filesystem {
     EXT2,
     BTRFS,
     VFAT,
+    NTFS,
 };
 
 extern int fs_type;

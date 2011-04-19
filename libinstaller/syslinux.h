@@ -26,10 +26,10 @@ extern unsigned char syslinux_ldlinux[];
 extern const unsigned int syslinux_ldlinux_len;
 extern const int syslinux_ldlinux_mtime;
 
-#define boot_sector	syslinux_bootsect
+#define boot_sector     syslinux_bootsect
 #define boot_sector_len syslinux_bootsect_len
-#define boot_image	syslinux_ldlinux
-#define boot_image_len	syslinux_ldlinux_len
+#define boot_image      syslinux_ldlinux
+#define boot_image_len  syslinux_ldlinux_len
 
 extern unsigned char syslinux_mbr[];
 extern const unsigned int syslinux_mbr_len;
@@ -39,11 +39,15 @@ extern const int syslinux_mbr_mtime;
 #define SECTOR_SHIFT	9
 #define SECTOR_SIZE	(1 << SECTOR_SHIFT)
 
-/* This takes a boot sector and merges in the syslinux fields */
-void syslinux_make_bootsect(void *);
+/* This takes a boot sector of a specific filesystem and merges
+ * in the syslinux fields
+ */
+void syslinux_make_bootsect(void *bs, int fs_type);
 
-/* Check to see that what we got was indeed an MS-DOS boot sector/superblock */
-const char *syslinux_check_bootsect(const void *bs);
+/* Check to see that what we got was indeed an
+ * FAT/NTFS boot sector/superblock
+ */
+const char *syslinux_check_bootsect(const void *bs, int *fs_type);
 
 /* This patches the boot sector and ldlinux.sys based on a sector map */
 typedef uint64_t sector_t;

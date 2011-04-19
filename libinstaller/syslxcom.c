@@ -133,6 +133,9 @@ void clear_attributes(int fd)
 	    ioctl(fd, FAT_IOCTL_SET_ATTRIBUTES, &attr);
 	    break;
 	}
+    case NTFS:
+        /* is there anything else to do here ? */
+        break;
 	default:
 	    break;
 	}
@@ -163,6 +166,9 @@ void set_attributes(int fd)
 	    ioctl(fd, FAT_IOCTL_SET_ATTRIBUTES, &attr);
 	    break;
 	}
+    case NTFS:
+        /* is there anything else to do here ? */
+        break;
 	default:
 	    break;
 	}

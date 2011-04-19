@@ -638,7 +638,7 @@ int main(int argc, char *argv[])
     /*
      * Check to see that what we got was indeed an MS-DOS boot sector/superblock
      */
-    if ((errmsg = syslinux_check_bootsect(sectbuf))) {
+    if ((errmsg = syslinux_check_bootsect(sectbuf, NULL))) {
 	unlock_device(0);
 	puts(errmsg);
 	putchar('\n');
@@ -748,8 +748,12 @@ int main(int argc, char *argv[])
     /* Read the superblock again since it might have changed while mounted */
     read_device(dev_fd, sectbuf, 1, 0);
 
-    /* Copy the syslinux code into the boot sector */
-    syslinux_make_bootsect(sectbuf);
+    /* Copy the syslinux code into the boot sector
+     * Note: passing 3 as second argument means that
+     * we're going to copy the syslinux code into an
+     * FAT boot sector
+     */
+    syslinux_make_bootsect(sectbuf, 3);
 
     /* Write new boot sector */
     if (opt.bootsecfile) {

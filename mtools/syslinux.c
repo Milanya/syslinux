@@ -197,7 +197,7 @@ int main(int argc, char *argv[])
     /*
      * Check to see that what we got was indeed an MS-DOS boot sector/superblock
      */
-    if ((errmsg = syslinux_check_bootsect(sectbuf))) {
+    if ((errmsg = syslinux_check_bootsect(sectbuf, NULL))) {
 	die(errmsg);
     }
 
@@ -355,8 +355,12 @@ int main(int argc, char *argv[])
     /* Read the superblock again since it might have changed while mounted */
     xpread(dev_fd, sectbuf, SECTOR_SIZE, opt.offset);
 
-    /* Copy the syslinux code into the boot sector */
-    syslinux_make_bootsect(sectbuf);
+    /* Copy the syslinux code into the boot sector
+     * Note: passing 3 as second argument indicates that
+     * we're going to copy the syslinux code into an
+     * FAT boot sector
+     */
+    syslinux_make_bootsect(sectbuf, 3);
 
     /* Write new boot sector */
     xpwrite(dev_fd, sectbuf, SECTOR_SIZE, opt.offset);
