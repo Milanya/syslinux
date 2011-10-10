@@ -269,12 +269,12 @@ int main(int argc, char *argv[])
 	|| opt.device[2])
 	usage(EX_USAGE, MODE_SYSLINUX_DOSWIN);
 
-    if (opt.sectors || opt.heads || opt.reset_adv || opt.set_once
-	|| (opt.update_only > 0) || opt.menu_save || opt.offset) {
-	fprintf(stderr,
-		"At least one specified option not yet implemented"
-		" for this installer.\n");
-	exit(1);
+    if (opt.sectors || opt.heads || opt.set_once ||
+        (opt.update_only > 0) || opt.menu_save || opt.offset) {
+       fprintf(stderr,
+                "At least one specified option not yet implemented"
+                " for this installer.\n");
+       exit(1);
     }
 
     /* Test if drive exists */
@@ -340,8 +340,10 @@ int main(int argc, char *argv[])
     /* Just ignore error if the file do not exists */
     DeleteFile(ldlinux_name);
 
-    /* Initialize the ADV -- this should be smarter */
-    syslinux_reset_adv(syslinux_adv);
+    if (opt.reset_adv) {
+        /* Initialize the ADV -- this should be smarter */
+        syslinux_reset_adv(syslinux_adv);
+    }
 
     /* Create ldlinux.sys file */
     f_handle = CreateFile(ldlinux_name, GENERIC_READ | GENERIC_WRITE,
