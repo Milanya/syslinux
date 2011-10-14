@@ -722,7 +722,13 @@ int main(int argc, char *argv[])
     /*
      * Patch ldlinux.sys and the boot sector
      */
-    i = syslinux_patch(sectors, nsectors, opt.stupid_mode, opt.raid_mode, opt.directory, NULL);
+    i = syslinux_patch(sectors, nsectors, opt.stupid_mode, opt.raid_mode,
+                        opt.directory, NULL);
+    if (i < 0) {
+        fprintf(stderr, "Failed to patch ldlinux.sys and the boot sector.\n");
+        exit(1);
+    }
+
     patch_sectors = (i + SECTOR_SIZE - 1) >> SECTOR_SHIFT;
 
     /*

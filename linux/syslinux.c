@@ -456,6 +456,11 @@ umount:
      */
     i = syslinux_patch(sectors, ldlinux_sectors, opt.stupid_mode,
 		       opt.raid_mode, subdir, NULL);
+    if (i < 0) {
+        fprintf(stderr, "Failed to patch ldlinux.sys and the boot sector.\n");
+        exit(1);
+    }
+
     patch_sectors = (i + SECTOR_SIZE - 1) >> SECTOR_SHIFT;
 
     /*

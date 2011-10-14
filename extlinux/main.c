@@ -310,6 +310,10 @@ int patch_file_and_bootblock(int fd, const char *dir, int devfd)
     /* Create the modified image in memory */
     rv = syslinux_patch(sectp, nsect, opt.stupid_mode,
 			opt.raid_mode, subpath, subvol);
+    if (rv < 0) {
+        fprintf(stderr, "Failed to patch ldlinux.sys and the boot sector.\n");
+        exit(1);
+    }
 
     free(dirpath);
     return rv;

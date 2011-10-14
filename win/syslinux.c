@@ -250,6 +250,7 @@ int main(int argc, char *argv[])
     const char *errmsg;
     struct libfat_filesystem *fs;
     libfat_sector_t s, *secp;
+    int err;
     libfat_sector_t *sectors;
     int ldlinux_sectors;
     uint32_t ldlinux_cluster;
@@ -394,7 +395,12 @@ int main(int argc, char *argv[])
     /*
      * Patch ldlinux.sys and the boot sector
      */
-    syslinux_patch(sectors, nsectors, opt.stupid_mode, opt.raid_mode, opt.directory, NULL);
+    err = syslinux_patch(sectors, nsectors, opt.stupid_mode, opt.raid_mode,
+                        opt.directory, NULL);
+    if (err < 0) {
+        fprintf(stderr, "Failed to patch ldlinux.sys and the boot sector.\n");
+        exit(1);
+    }
 
     /*
      * Rewrite the file
