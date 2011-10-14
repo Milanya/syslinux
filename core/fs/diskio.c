@@ -290,13 +290,29 @@ static inline bool is_power_of_2(uint32_t x)
     return !(x & (x-1));
 }
 
-void getoneblk(struct disk *disk, char *buf, block_t block, int block_size)
+static inline void __get_blocks(struct disk *disk, char *buf, block_t block,
+                                int block_size, uint64_t len)
 {
     int sec_per_block = block_size / disk->sector_size;
+    /* get number of successive sectors to be read */
+    int ssectors = !len ? sec_per_block :
+                          (len * block_size) / disk->sector_size;
 
-    disk->rdwr_sectors(disk, buf, block * sec_per_block, sec_per_block, 0);
+    /* read block from disk */
+    disk->rdwr_sectors(disk, buf, block * sec_per_block, ssectors, 0);
 }
 
+inline void get_blocks(struct disk *disk, char *buf, block_t block,
+                    int block_size, uint64_t len)
+{
+    __get_blocks(disk, buf, block, block_size, len);
+}
+
+inline void get_block(struct disk *disk, char *buf, block_t block,
+                    int block_size)
+{
+    __get_blocks(disk, buf, block, block_size, 0);
+}
 
 struct disk *disk_init(uint8_t devno, bool cdrom, sector_t part_start,
                        uint16_t bsHeads, uint16_t bsSecPerTrack,

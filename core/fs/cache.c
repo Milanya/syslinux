@@ -9,10 +9,9 @@
 #include "core.h"
 #include "cache.h"
 
-
 /*
  * Initialize the cache data structres. the _block_size_shift_ specify
- * the block size, which is 512 byte for FAT fs of the current 
+ * the block size, which is 512 byte for FAT fs of the current
  * implementation since the block(cluster) size in FAT is a bit big.
  *
  */
@@ -45,7 +44,7 @@ void cache_init(struct device *dev, int block_size_shift)
     head->data  = NULL;
 
     prev = head;
-    
+
     for (i = 0; i < dev->cache_entries; i++) {
         cur = &cache[i];
         cur->data  = data;
@@ -69,7 +68,7 @@ void cache_lock_block(struct cache *cs)
 }
 
 /*
- * Check for a particular BLOCK in the block cache, 
+ * Check for a particular BLOCK in the block cache,
  * and if it is already there, just do nothing and return;
  * otherwise pick a victim block and update the LRU link.
  */
@@ -86,7 +85,7 @@ struct cache *_get_cache_block(struct device *dev, block_t block)
 	    goto found;
 	cs++;
     }
-    
+
     /* Not found, pick a victim */
     cs = head->next;
 
@@ -95,7 +94,7 @@ found:
     if (cs->next) {
 	cs->prev->next = cs->next;
 	cs->next->prev = cs->prev;
-	
+
 	cs->prev = head->prev;
 	head->prev->next = cs;
 	cs->next = head;
@@ -103,23 +102,91 @@ found:
     }
 
     return cs;
-}    
+}
 
-/*
- * Check for a particular BLOCK in the block cache, 
+/**
+ * Check for a particular BLOCK in the block cache,
  * and if it is already there, just do nothing and return;
  * otherwise load it from disk and update the LRU link.
+ *
+ * @dev: device
+ * @block: Starting block number
+ * @len: Number of successive blocks from starting @block
+ *
  * Return the data pointer.
  */
-const void *get_cache(struct device *dev, block_t block)
+static const void *__get_cache(struct device *dev, block_t block, uint64_t len)
 {
-    struct cache *cs;
+    struct cache *cc;
+    uint16_t cache_block_size = dev->cache_block_size;
+    uint8_t *data;
+    uint64_t count;
 
-    cs = _get_cache_block(dev, block);
-    if (cs->block != block) {
-	cs->block = block;
-        getoneblk(dev->disk, cs->data, block, dev->cache_block_size);
+    if (!len) {
+        /* we're going to only read one block */
+        cc = _get_cache_block(dev, block);
+        /* check if the requested block is in the cache. if not, then will read
+         * it from disk.
+         */
+        if (cc->block != block)
+            get_block(dev->disk, cc->data, block, cache_block_size);
+
+        /* return the data block content */
+        return cc->data;
     }
 
-    return cs->data;
+    /* now we're about to read successive blocks from either cache or disk.
+     * this will be a bit tricky. somehow let's do it :-)
+     */
+
+    data = (uint8_t *)malloc((len - 1) * cache_block_size);
+    if (!data)
+        malloc_error("uint8_t *");
+
+    count = 0;
+    do {
+        cc = _get_cache_block(dev, block);
+        if (cc->block != block)
+            get_block(dev->disk, cc->data, block, cache_block_size);
+
+        memcpy(data + count, cc->data, cache_block_size);
+        count += cache_block_size;  /* update count to the next copy */
+
+    } while (++block < len);
+
+    /* return the data pointer */
+    return data;
+}
+
+/**
+ * Given a block number and a number of successive blocks, it will return
+ * contiguous cached data from @block to @len.
+ *
+ * @dev: device
+ * @block: Starting block number
+ * @len: Number of successive blocks
+ *
+ * Return the data pointer
+ */
+inline const void *new_get_cache(struct device *dev, block_t block,
+                                uint64_t len)
+{
+    return __get_cache(dev, block, len);
+}
+
+/**
+ * Check for a particular BLOCK in the block cache,
+ * and if it is already there, just do nothing and return;
+ * otherwise load it from disk and update the LRU link.
+ *
+ * NOTE: it will only read one block at a time.
+ *
+ * @dev: device
+ * @block: block number
+ *
+ * Return the data pointer.
+ */
+inline const void *get_cache(struct device *dev, block_t block)
+{
+    return __get_cache(dev, block, 0);
 }
