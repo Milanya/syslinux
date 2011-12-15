@@ -179,15 +179,17 @@ int multi_probe_drive(uint8_t drive)
     com32sys_t regs;
 
     dskprobe_printf("INT 13 DL%02x:\n", drive);
-    /* Only probe the BDA for floppies */
     if (drive & 0x80) {
-
-	c += probe_int13h_08h(drive, &regs);
-	c += probe_int13h_15h(drive, &regs);
-	c += probe_int13h_41h(drive, &regs);
+        c += probe_int13h_08h(drive, &regs);
+        c += probe_int13h_15h(drive, &regs);
+        c += probe_int13h_41h(drive, &regs);
+    } else {
+        /* Only probe the BDA for floppies */
+        c += probe_bda_drive(drive);
     }
-    c += probe_bda_drive(drive);
+
     dskprobe_pause(&regs);
+
     return c;
 }
 
